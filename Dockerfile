@@ -17,10 +17,12 @@ FROM alpine:latest
 WORKDIR /src/
 RUN apk --no-cache add pcre ca-certificates
 
-COPY --from=nim /src/nitter/nitter ./           # binary
+COPY --from=nim /src/nitter/nitter ./         # binary
 COPY --from=nim /src/nitter/nitter.example.conf ./nitter.conf
 COPY --from=nim /src/nitter/public ./public
-COPY --from=nim /src/nitter/sessions.jsonl /sessions.jsonl  # ✅ ADD THIS LINE
+
+# ✅ Pull in sessions.jsonl from root
+COPY sessions.jsonl ./sessions.jsonl
 
 EXPOSE 8080
 RUN adduser -h /src/ -D -s /bin/sh nitter
