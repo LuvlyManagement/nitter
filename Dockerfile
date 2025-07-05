@@ -1,9 +1,8 @@
-FROM nimlang/nim:2.2.0-alpine-regular as nim
-LABEL maintainer="setenforce@protonmail.com"
+# Build stage
+FROM nimlang/nim:2.2.0-alpine-regular as builder
+WORKDIR /app
 
 RUN apk --no-cache add libsass-dev pcre
-
-WORKDIR /src/nitter
 
 COPY nitter.nimble .
 RUN nimble install -y --depsOnly
@@ -13,18 +12,16 @@ RUN nimble build -d:danger -d:lto -d:strip --mm:refc \
     && nimble scss \
     && nimble md
 
+# Final image
 FROM alpine:latest
-WORKDIR /src/
+WORKDIR /app
+
 RUN apk --no-cache add pcre ca-certificates
 
-COPY --from=nim /src/nitter/nitter ./         # binary
-COPY --from=nim /src/nitter/nitter.example.conf ./nitter.conf
-COPY --from=nim /src/nitter/public ./public
-
-# ✅ Pull in sessions.jsonl from root
-COPY sessions.jsonl ./sessions.jsonl
+COPY --from=builder /app/nitter ./nitter
+COPY --from=builder /app/nitter.example.conf ./nitter.conf
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/sessions.jsonl ./sessions.jsonl
 
 EXPOSE 8080
-RUN adduser -h /src/ -D -s /bin/sh nitter
-USER nitter
-CMD ./nitter
+CMD ["./nitter"]
