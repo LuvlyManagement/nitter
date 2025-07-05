@@ -21,7 +21,6 @@ RUN apk --no-cache add pcre ca-certificates
 COPY --from=builder /app/nitter ./nitter
 COPY --from=builder /app/nitter.example.conf ./nitter.conf
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/sessions.jsonl ./sessions.jsonl
 
 EXPOSE 8080
 CMD ["./nitter"]
